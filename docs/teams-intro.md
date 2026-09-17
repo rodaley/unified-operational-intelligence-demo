@@ -34,10 +34,23 @@ who built it. The repository is the tool that makes them more capable.
 >    workbook, so you find a broken tile before an audience does
 >
 > **What you get to show:** 150 related alerts correlated into 1 actionable
-> incident. The affected business services, the users behind them, and what the
-> customer is spending to learn all this — on one pane, in their own portal.
+> incident — a 99% reduction in things a human has to triage. The affected
+> business services and the users behind them, on one pane, in their own portal.
 > When someone says "prove it", you open the query and read the KQL aloud. It is
 > deterministic, not a model.
+>
+> **And then the part that changes who's in the room.** The workbook puts
+> revenue-at-risk and a user count on the incident while it is still open, and
+> the spend tab shows what the estate pays to be monitored — including telemetry
+> that more than one tool is ingesting. In the sample data that duplication is
+> about $346,000 a year.
+>
+> **Be straight about what that number is:** invented figures on a synthetic
+> estate. It is not a customer estimate and it will not survive being quoted as
+> one. What it gives you is a *structure* — revenue exposed, users affected,
+> spend duplicated — that the customer can refill with their own numbers. The
+> demo's value is that it earns you that conversation, not that it wins the
+> business case for you.
 >
 > **Without it** you're describing an outcome. **With it** you're standing in
 > the customer's own Azure Portal showing one, and the conversation moves from
@@ -62,8 +75,12 @@ For a busy channel where the long post will not be read.
 > Six real VMs, real Azure Monitor telemetry, and the Azure Portal as the entire
 > demo surface — no app to deploy. It shows 150 related alerts correlated into 1
 > actionable incident, the business services and users behind it, and the
-> observability spend underneath. All native: workbook, VM Insights, Alerts,
-> Logs, Automation.
+> observability spend underneath — including the share being ingested twice. All
+> native: workbook, VM Insights, Alerts, Logs, Automation.
+>
+> The financials are invented, so treat them as a structure the customer refills
+> with their own numbers rather than a savings claim. It gets you a business
+> conversation off a technical demo, which is the point.
 >
 > One Bicep deployment into your own subscription, a seeder, and a validation
 > script that runs all 17 workbook queries so nothing breaks on stage. Presenter
@@ -89,7 +106,7 @@ change the hero.
 | **4. Who gives them a plan** | Three concrete steps: deploy, seed, validate. Short enough to be believed. |
 | **5. And calls them to action** | *Direct:* clone and deploy it into a sandbox. *Transitional:* read the README story and the business case first. |
 | **6. That helps them avoid failure** | Turning up with slides; losing an infra audience to a PaaS demo; a tile failing live in front of a customer. |
-| **7. And ends in success** | Standing in the customer's own portal, showing the correlation, and answering "prove it" by reading the query aloud. |
+| **7. And ends in success** | Standing in the customer's own portal, showing the correlation, answering "prove it" by reading the query aloud — and having the room move from a monitoring conversation to a business one. |
 
 ---
 
@@ -109,7 +126,10 @@ survive a sceptical audience.
   credibility asset, not a disclaimer to bury.
 - **Illustrative financials.** The revenue, user and spend figures are invented
   to be plausible. They are not a customer estimate and not a migration business
-  case.
+  case. Present them as a *structure* the customer refills with their own
+  numbers — revenue exposed, users affected, spend duplicated. A number that
+  gets quoted back to you in a QBR as if it were theirs will cost you more
+  credibility than the demo ever earned.
 - **No autonomous remediation.** Remediation is proposed; a human approves; the
   approval is written to an audit trail. Do not describe it as self-healing.
 - **Not a vendor scorecard.** The spend tab shows duplicated ingest across
