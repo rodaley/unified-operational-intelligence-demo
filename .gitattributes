@@ -1,0 +1,12 @@
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+
+# Generated deliverable. Marked binary so git never attempts line-ending
+# normalisation on the zip container, which would corrupt it.
+*.docx binary
+*.pdf binary

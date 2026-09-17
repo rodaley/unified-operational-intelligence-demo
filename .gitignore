@@ -1,0 +1,44 @@
+# Compiled ARM output from `az bicep build`
+infra-iaas/main.json
+infra-iaas/**/*.json.tmp
+
+# Environment
+.env
+.env.*
+
+# Azure CLI / Developer CLI local state (may contain endpoints and subscription ids)
+.azure/
+
+# SSH keys must never be committed. The estate keypair lives outside the repo,
+# but this guards against a stray copy.
+*.pem
+*.key
+id_rsa*
+uoi-iaas-demo*
+
+# Logs and scratch output
+*.log
+logs/
+
+# Document generator local state.
+#
+# shots/ holds the raw portal captures, which show the signed-in account chip,
+# the directory name and the subscription ID. Only the redacted copies in
+# tools/docgen/shots-redacted/ are safe to commit.
+#
+# state.json and edge-profile/ are Playwright's persisted browser session and
+# contain live Azure Portal auth cookies.
+tools/docgen/shots/
+tools/docgen/state.json
+tools/docgen/edge-profile/
+tools/docgen/pylibs/
+node_modules/
+
+# Recorded demonstration video (large binary)
+recordings/
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

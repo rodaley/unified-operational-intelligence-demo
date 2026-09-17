@@ -1,0 +1,14 @@
+{
+  "name": "uoi-docgen",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Generates the UOI Azure Portal demo walkthrough document from inline content and redacted portal screenshots.",
+  "license": "MIT",
+  "type": "commonjs",
+  "scripts": {
+    "build": "node build-doc.js ../../docs/UOI-Azure-Portal-Demo-Walkthrough.docx"
+  },
+  "dependencies": {
+    "docx": "^9.7.1"
+  }
+}

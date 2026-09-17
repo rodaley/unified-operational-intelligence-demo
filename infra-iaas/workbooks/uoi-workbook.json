@@ -1,0 +1,573 @@
+{
+  "version": "Notebook/1.0",
+  "items": [
+    {
+      "type": 1,
+      "content": {
+        "json": "# Unified Operational Intelligence\n\n### One estate. One pane of glass. Native Azure Monitor.\n\n---\n\n> **Synthetic Demo Data.** The six virtual machines in this estate are real and are emitting real Azure Monitor telemetry. The business context layered over them — services, alert history, impact and spend — is **synthetic, generated for demonstration purposes**. Every synthetic record carries `IsSynthetic = true`.\n>\n> All financial figures are **Illustrative Sample Data, not a customer estimate.**"
+      },
+      "name": "title"
+    },
+    {
+      "type": 9,
+      "content": {
+        "version": "KqlParameterItem/1.0",
+        "parameters": [
+          {
+            "id": "uoi-timerange",
+            "version": "KqlParameterItem/1.0",
+            "name": "TimeRange",
+            "label": "Time range",
+            "type": 4,
+            "isRequired": true,
+            "typeSettings": {
+              "selectableValues": [
+                { "durationMs": 3600000 },
+                { "durationMs": 14400000 },
+                { "durationMs": 43200000 },
+                { "durationMs": 86400000 },
+                { "durationMs": 604800000 },
+                { "durationMs": 2592000000 }
+              ],
+              "allowCustom": true
+            },
+            "value": { "durationMs": 86400000 }
+          }
+        ],
+        "style": "pills",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces"
+      },
+      "name": "parameters"
+    },
+    {
+      "type": 11,
+      "content": {
+        "version": "LinkItem/1.0",
+        "style": "tabs",
+        "links": [
+          {
+            "cellValue": "selectedTab",
+            "linkTarget": "parameter",
+            "linkLabel": "Estate health",
+            "subTarget": "estate",
+            "style": "link"
+          },
+          {
+            "cellValue": "selectedTab",
+            "linkTarget": "parameter",
+            "linkLabel": "Incident correlation",
+            "subTarget": "incident",
+            "style": "link"
+          },
+          {
+            "cellValue": "selectedTab",
+            "linkTarget": "parameter",
+            "linkLabel": "Business impact",
+            "subTarget": "impact",
+            "style": "link"
+          },
+          {
+            "cellValue": "selectedTab",
+            "linkTarget": "parameter",
+            "linkLabel": "Observability spend",
+            "subTarget": "spend",
+            "style": "link"
+          },
+          {
+            "cellValue": "selectedTab",
+            "linkTarget": "parameter",
+            "linkLabel": "Response",
+            "subTarget": "response",
+            "style": "link"
+          }
+        ]
+      },
+      "name": "tabs"
+    },
+
+    {
+      "type": 12,
+      "conditionalVisibility": {
+        "parameterName": "selectedTab",
+        "comparison": "isEqualTo",
+        "value": "estate"
+      },
+      "content": {
+        "version": "NotebookGroup/1.0",
+        "groupType": "editable",
+        "items": [
+          {
+            "type": 1,
+            "content": {
+              "json": "## Live estate telemetry\n\nEverything on this tab is **real**. It is collected from six Linux virtual machines by the Azure Monitor Agent through a Data Collection Rule, and stored in Log Analytics. No agent other than Azure Monitor is installed on these machines."
+            },
+            "name": "estate-intro"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "timeContextFromParameter": "TimeRange",
+              "query": "Heartbeat\n| where TimeGenerated > ago(30m)\n| summarize LastSeen = max(TimeGenerated) by Computer\n| extend Tier = case(Computer startswith 'vm-web', 'Web', Computer startswith 'vm-app', 'Application', 'Data')\n| extend Status = iff(LastSeen > ago(10m), 'Reporting', 'Silent')\n| project Computer, Tier, Status, LastSeen\n| order by Computer asc",
+              "size": 1,
+              "title": "Estate inventory — agent reporting status (live)",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "table",
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "Status",
+                    "formatter": 18,
+                    "formatOptions": {
+                      "thresholdsOptions": "icons",
+                      "thresholdsGrid": [
+                        {
+                          "operator": "==",
+                          "thresholdValue": "Reporting",
+                          "representation": "success",
+                          "text": "{0}{1}"
+                        },
+                        {
+                          "operator": "Default",
+                          "thresholdValue": null,
+                          "representation": "failed",
+                          "text": "{0}{1}"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            "name": "estate-inventory"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "timeContextFromParameter": "TimeRange",
+              "query": "InsightsMetrics\n| where Namespace == 'Processor' and Name == 'UtilizationPercentage'\n| summarize CPUPercent = avg(Val) by bin(TimeGenerated, 5m), Computer\n| order by TimeGenerated asc",
+              "size": 0,
+              "title": "CPU utilisation by machine (live, Azure Monitor Agent)",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "timechart"
+            },
+            "name": "estate-cpu"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "timeContextFromParameter": "TimeRange",
+              "query": "InsightsMetrics\n| where Namespace == 'Memory' and Name == 'AvailableMB'\n| summarize AvailableMB = avg(Val) by bin(TimeGenerated, 5m), Computer\n| order by TimeGenerated asc",
+              "size": 0,
+              "title": "Available memory by machine (live)",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "timechart"
+            },
+            "name": "estate-memory"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "timeContextFromParameter": "TimeRange",
+              "query": "InsightsMetrics\n| where Namespace == 'Network'\n| summarize BytesPerSecond = avg(Val) by Computer, Name\n| extend Tier = case(Computer startswith 'vm-web', '1 Web', Computer startswith 'vm-app', '2 Application', '3 Data')\n| order by Tier asc, Computer asc",
+              "size": 0,
+              "title": "Inter-tier network activity — web to application to data (live)",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "table"
+            },
+            "name": "estate-network"
+          },
+          {
+            "type": 1,
+            "content": {
+              "json": "**Reading this tab.** Three tiers, two machines each, in a private virtual network with no public inbound access. The data tier accepts connections only from the application subnet. Network activity between the tiers is genuine traffic generated on the machines themselves.\n\n*Note on topology mapping:* the VM Insights **Map** feature is not enabled in this estate. Its Dependency Agent does not support current Ubuntu releases. Tier relationships are therefore presented from the estate definition and live network metrics instead."
+            },
+            "name": "estate-note"
+          }
+        ]
+      },
+      "name": "group-estate"
+    },
+
+    {
+      "type": 12,
+      "conditionalVisibility": {
+        "parameterName": "selectedTab",
+        "comparison": "isEqualTo",
+        "value": "incident"
+      },
+      "content": {
+        "version": "NotebookGroup/1.0",
+        "groupType": "editable",
+        "items": [
+          {
+            "type": 1,
+            "content": {
+              "json": "## Incident correlation\n\n**Synthetic Demo Data.** The alert history on this tab is generated to demonstrate correlation at a scale a six-machine estate cannot produce on its own."
+            },
+            "name": "incident-intro"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "timeContextFromParameter": "TimeRange",
+              "query": "let seedStart = toscalar(UoiEstateAlert_CL | summarize max(ingestion_time())) - 15m;\nUoiEstateAlert_CL\n| where ingestion_time() >= seedStart\n| where IsSynthetic == true\n| summarize RelatedAlerts = dcount(AlertId) by IncidentId\n| summarize ['Related alerts'] = sum(RelatedAlerts), ['Actionable incidents'] = dcount(IncidentId)\n| extend ['Reduction in items to triage'] = strcat(toint(100.0 * (1 - todouble(['Actionable incidents']) / todouble(['Related alerts']))), '%')",
+              "size": 3,
+              "title": "Related alerts correlated into actionable incidents",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "table"
+            },
+            "name": "incident-headline"
+          },
+          {
+            "type": 1,
+            "content": {
+              "json": "> **150 related alerts correlated into 1 actionable incident.**\n>\n> These are *related alerts*, not false positives. Each one is a genuine signal from a component that was genuinely affected. The value of correlation is not that the alerts were wrong — it is that a responder should be handed **one** incident to work rather than 150 notifications to triage individually.\n>\n> Correlation here indicates a **relationship** between signals. It does not, by itself, prove causation."
+            },
+            "name": "incident-framing"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "timeContextFromParameter": "TimeRange",
+              "query": "let seedStart = toscalar(UoiEstateAlert_CL | summarize max(ingestion_time())) - 15m;\nUoiEstateAlert_CL\n| where ingestion_time() >= seedStart\n| where IsSynthetic == true\n| summarize Alerts = count() by bin(TimeGenerated, 2m), Tier\n| order by TimeGenerated asc",
+              "size": 0,
+              "title": "Alert arrival over time, by tier — the storm as the operator experiences it",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "barchart"
+            },
+            "name": "incident-storm"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "timeContextFromParameter": "TimeRange",
+              "query": "let seedStart = toscalar(UoiEstateAlert_CL | summarize max(ingestion_time())) - 15m;\nUoiEstateAlert_CL\n| where ingestion_time() >= seedStart\n| where IsSynthetic == true\n| where Severity == 'Sev1'\n| project TimeGenerated, Severity, Service, Component, Tier, Message\n| order by TimeGenerated asc",
+              "size": 0,
+              "title": "Earliest signal in the incident",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "table"
+            },
+            "name": "incident-root"
+          },
+          {
+            "type": 1,
+            "content": {
+              "json": "**Interpreting the earliest signal.** The first signal in this incident came from the data tier. That makes it the natural place to begin an investigation, and the dependency direction in this estate — web depends on application, application depends on data — is consistent with the order the alerts arrived.\n\nThat is evidence for a hypothesis, not a proof of cause. Confirming it requires examining the data tier directly."
+            },
+            "name": "incident-causation-note"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "timeContextFromParameter": "TimeRange",
+              "query": "let seedStart = toscalar(UoiEstateAlert_CL | summarize max(ingestion_time())) - 15m;\nUoiEstateAlert_CL\n| where ingestion_time() >= seedStart\n| where IsSynthetic == true\n| summarize Alerts = dcount(AlertId) by Tier, Severity\n| order by Tier asc, Severity asc",
+              "size": 0,
+              "title": "Alert distribution by tier and severity",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "barchart"
+            },
+            "name": "incident-distribution"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "timeContextFromParameter": "TimeRange",
+              "query": "let seedStart = toscalar(UoiEstateAlert_CL | summarize max(ingestion_time())) - 15m;\nUoiEstateAlert_CL\n| where ingestion_time() >= seedStart\n| where IsSynthetic == true\n| summarize Alerts = dcount(AlertId), Services = dcount(Service), Components = dcount(Component), ['First signal'] = min(TimeGenerated), ['Latest signal'] = max(TimeGenerated) by IncidentId, DataClassification",
+              "size": 0,
+              "title": "Incident summary — with data classification shown",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "table"
+            },
+            "name": "incident-summary"
+          }
+        ]
+      },
+      "name": "group-incident"
+    },
+
+    {
+      "type": 12,
+      "conditionalVisibility": {
+        "parameterName": "selectedTab",
+        "comparison": "isEqualTo",
+        "value": "impact"
+      },
+      "content": {
+        "version": "NotebookGroup/1.0",
+        "groupType": "editable",
+        "items": [
+          {
+            "type": 1,
+            "content": {
+              "json": "## Business impact\n\n**Illustrative Sample Data, not a customer estimate.** The services, user counts and revenue figures below are invented for this demonstration. They are shaped to be plausible for a mid-size insurer; they are not derived from any customer's actual figures."
+            },
+            "name": "impact-intro"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "timeContextFromParameter": "TimeRange",
+              "query": "let seedStart = toscalar(UoiEstateService_CL | summarize max(ingestion_time())) - 15m;\nUoiEstateService_CL\n| where ingestion_time() >= seedStart\n| where IsSynthetic == true\n| summarize HealthScore = avg(HealthScore) by bin(TimeGenerated, 5m), Service\n| order by TimeGenerated asc",
+              "size": 0,
+              "title": "Business service health through the incident window",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "timechart"
+            },
+            "name": "impact-health"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "timeContextFromParameter": "TimeRange",
+              "query": "let seedStart = toscalar(UoiEstateService_CL | summarize max(ingestion_time())) - 15m;\nUoiEstateService_CL\n| where ingestion_time() >= seedStart\n| where IsSynthetic == true\n| summarize ['Peak users affected'] = max(UsersAffected), ['Peak revenue at risk (USD)'] = max(RevenueAtRiskUsd), ['Lowest health score'] = min(HealthScore) by Service, Tier\n| order by ['Peak revenue at risk (USD)'] desc",
+              "size": 0,
+              "title": "Peak impact by business service (illustrative)",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "table",
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "Peak revenue at risk (USD)",
+                    "formatter": 8,
+                    "formatOptions": {
+                      "palette": "orange"
+                    }
+                  },
+                  {
+                    "columnMatch": "Lowest health score",
+                    "formatter": 8,
+                    "formatOptions": {
+                      "palette": "redGreen"
+                    }
+                  }
+                ]
+              }
+            },
+            "name": "impact-peak"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "timeContextFromParameter": "TimeRange",
+              "query": "let seedStart = toscalar(UoiEstateService_CL | summarize max(ingestion_time())) - 15m;\nUoiEstateService_CL\n| where ingestion_time() >= seedStart\n| where IsSynthetic == true\n| summarize RevenueAtRisk = max(RevenueAtRiskUsd) by Service\n| order by RevenueAtRisk desc",
+              "size": 0,
+              "title": "Revenue at risk by service (illustrative sample data)",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "piechart"
+            },
+            "name": "impact-revenue"
+          },
+          {
+            "type": 1,
+            "content": {
+              "json": "**Why this tab exists.** Infrastructure metrics tell an engineer which machine is unwell. They do not tell an executive what it costs. Attaching business services to the same telemetry, in the same platform, is what turns a monitoring tool into an operational decision-making surface.\n\nThe mapping from machine to business service is maintained as data, not hard-coded into dashboards, so it can change as the estate changes."
+            },
+            "name": "impact-note"
+          }
+        ]
+      },
+      "name": "group-impact"
+    },
+
+    {
+      "type": 12,
+      "conditionalVisibility": {
+        "parameterName": "selectedTab",
+        "comparison": "isEqualTo",
+        "value": "spend"
+      },
+      "content": {
+        "version": "NotebookGroup/1.0",
+        "groupType": "editable",
+        "items": [
+          {
+            "type": 1,
+            "content": {
+              "json": "## Observability spend\n\n**Illustrative Sample Data, not a customer estimate.** The figures below are invented to illustrate a pattern common in large estates: several monitoring tools, each ingesting an overlapping subset of the same telemetry.\n\nThis is **not** a vendor scorecard and should not be presented as one. Existing tools in an estate were adopted for sound reasons and often remain the right choice for their specific purpose. The question this tab raises is narrower and fairer: *how much of the ingested data is duplicated across tools, and is that duplication intentional?*"
+            },
+            "name": "spend-intro"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "timeContextFromParameter": "TimeRange",
+              "query": "let seedStart = toscalar(UoiEstateCost_CL | summarize max(ingestion_time())) - 15m;\nUoiEstateCost_CL\n| where ingestion_time() >= seedStart\n| where IsSynthetic == true\n| summarize MonthlyCostUsd = avg(MonthlyCostUsd) by Tool, Category\n| order by MonthlyCostUsd desc",
+              "size": 0,
+              "title": "Monthly observability spend by tool (illustrative)",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "barchart"
+            },
+            "name": "spend-by-tool"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "timeContextFromParameter": "TimeRange",
+              "query": "let seedStart = toscalar(UoiEstateCost_CL | summarize max(ingestion_time())) - 15m;\nUoiEstateCost_CL\n| where ingestion_time() >= seedStart\n| where IsSynthetic == true\n| summarize MonthlyCostUsd = avg(MonthlyCostUsd) by bin(TimeGenerated, 30d), Tool\n| order by TimeGenerated asc",
+              "size": 0,
+              "title": "Spend trend over six months (illustrative)",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "linechart"
+            },
+            "name": "spend-trend"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "timeContextFromParameter": "TimeRange",
+              "query": "let seedStart = toscalar(UoiEstateCost_CL | summarize max(ingestion_time())) - 15m;\nUoiEstateCost_CL\n| where ingestion_time() >= seedStart\n| where IsSynthetic == true\n| summarize ['Ingest GB/day'] = avg(IngestGbPerDay), ['Duplicated %'] = avg(DuplicationPercent), ['Monthly cost (USD)'] = avg(MonthlyCostUsd) by Tool\n| extend ['Duplicated GB/day'] = round(['Ingest GB/day'] * ['Duplicated %'] / 100.0, 1)\n| order by ['Duplicated GB/day'] desc",
+              "size": 0,
+              "title": "Ingestion volume and overlap between tools (illustrative)",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "table",
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "Duplicated %",
+                    "formatter": 8,
+                    "formatOptions": {
+                      "palette": "orange"
+                    }
+                  }
+                ]
+              }
+            },
+            "name": "spend-overlap"
+          },
+          {
+            "type": 1,
+            "content": {
+              "json": "**The honest framing.** Duplication is not automatically waste. Some of it is deliberate redundancy, and some tools genuinely need their own copy of a signal. The opportunity is to make the duplication **visible and chosen**, rather than accumulated by default — and consolidation is one option among several, not a foregone conclusion."
+            },
+            "name": "spend-note"
+          }
+        ]
+      },
+      "name": "group-spend"
+    },
+
+    {
+      "type": 12,
+      "conditionalVisibility": {
+        "parameterName": "selectedTab",
+        "comparison": "isEqualTo",
+        "value": "response"
+      },
+      "content": {
+        "version": "NotebookGroup/1.0",
+        "groupType": "editable",
+        "items": [
+          {
+            "type": 1,
+            "content": {
+              "json": "## Response and remediation\n\n### Nothing on this tab runs automatically.\n\nThis demonstration performs **no autonomous remediation**. A proposed action is presented to a human, with the evidence behind it, and a human decides. That is a deliberate design constraint, not a limitation of the platform.\n\n---\n\n#### Proposed action for this incident\n\n| | |\n|---|---|\n| **Incident** | INC-2026-0916-001 |\n| **Earliest signal** | Storage latency on the data tier |\n| **Proposed remediation** | Restart the affected data-tier service and re-balance connection pools |\n| **Blast radius** | 2 machines in the data subnet |\n| **Requires approval from** | On-call engineer or service owner |\n| **Status** | **Awaiting human approval — not executed** |\n\n---\n\n#### Why a human stays in the loop\n\nThe evidence is strong enough to *propose* an action. It is not strong enough to *take* one unsupervised:\n\n- Correlation established a **relationship** between the signals. It did not prove that the data tier caused the downstream alerts.\n- The proposed action is disruptive. Restarting a data-tier service has its own blast radius.\n- An operator holds context the platform does not — a change freeze, a release in flight, a known maintenance window.\n\nThe platform's job is to compress 150 signals into one incident with clear evidence, and present it in seconds rather than hours. The decision remains a human one."
+            },
+            "name": "response-gate"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "timeContextFromParameter": "TimeRange",
+              "query": "let seedStart = toscalar(UoiEstateAlert_CL | summarize max(ingestion_time())) - 15m;\nUoiEstateAlert_CL\n| where ingestion_time() >= seedStart\n| where IsSynthetic == true\n| summarize Alerts = dcount(AlertId), ['First signal'] = min(TimeGenerated) by IncidentId, Service, Tier\n| order by ['First signal'] asc",
+              "size": 0,
+              "title": "Evidence supporting the proposed action",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "table"
+            },
+            "name": "response-evidence"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "timeContextFromParameter": "TimeRange",
+              "query": "UoiRemediationAudit_CL\n| project TimeGenerated, IncidentId, ApprovalDecision, ApprovedBy, Justification, Executed, Outcome\n| order by TimeGenerated desc",
+              "size": 0,
+              "title": "Remediation audit trail — every decision recorded, including refusals",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "table",
+              "noDataMessage": "No remediation decision has been recorded yet. Run the Invoke-ApprovedRemediation runbook in the aa-uoi Automation account to record one.",
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "ApprovalDecision",
+                    "formatter": 18,
+                    "formatOptions": {
+                      "thresholdsOptions": "icons",
+                      "thresholdsGrid": [
+                        {
+                          "operator": "==",
+                          "thresholdValue": "Approve",
+                          "representation": "success",
+                          "text": "{0}{1}"
+                        },
+                        {
+                          "operator": "Default",
+                          "thresholdValue": null,
+                          "representation": "stopped",
+                          "text": "{0}{1}"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            "name": "response-audit"
+          },
+          {
+            "type": 1,
+            "content": {
+              "json": "**About the audit trail above.** It is produced by a real Azure Automation runbook, `Invoke-ApprovedRemediation`, which you can open and read in the `aa-uoi` Automation account.\n\nThe runbook is worth reading because of what it *refuses* to do:\n\n- It has **no default approval**. The decision and the approver's name are mandatory parameters, so a scheduled or unattended trigger fails closed.\n- Any decision other than `Approve` records a refusal and exits **without acting**.\n- It **modifies nothing** in either path. The remediation steps are simulated; what is real is the gate, the refusal path and the audit record.\n\nBoth outcomes are recorded. A refusal is as important to the audit trail as an approval."
+            },
+            "name": "response-runbook-note"
+          },
+          {
+            "type": 1,
+            "content": {
+              "json": "---\n\n#### Data provenance\n\n| Layer | Source | Real or synthetic |\n|---|---|---|\n| Machine metrics, logs, heartbeat | Azure Monitor Agent on 6 Linux VMs | **Real** |\n| Alert history and correlation | Seeded via Logs Ingestion API | Synthetic Demo Data |\n| Business services and impact | Seeded via Logs Ingestion API | Illustrative Sample Data |\n| Observability spend | Seeded via Logs Ingestion API | Illustrative Sample Data |\n| Remediation audit trail | Azure Automation runbook, real execution | Real run, simulated action |\n\nEvery synthetic row carries `IsSynthetic = true` and a `DataClassification` value. Any query on this workbook can be re-run in Log Analytics to confirm that labelling independently."
+            },
+            "name": "response-provenance"
+          }
+        ]
+      },
+      "name": "group-response"
+    }
+  ],
+  "fallbackResourceIds": [],
+  "$schema": "https://github.com/Microsoft/Application-Insights-Workbooks/blob/master/schema/workbook.json"
+}
