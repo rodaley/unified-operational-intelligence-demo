@@ -13,15 +13,12 @@ who built it. The repository is the tool that makes them more capable.
 
 > **Ever been asked "can you actually show me?" in a monitoring conversation — and had only slides?**
 >
-> You know the call. The customer runs four monitoring tools. Their alert queue
-> has more noise than signal. An outage last quarter took forty minutes to
-> explain to an executive, and nobody could say how many customers were affected
-> while it was happening.
+> Four monitoring tools. An alert queue nobody trusts. And when something
+> breaks, forty minutes before anyone can tell an executive which business
+> services are down and how many customers are affected.
 >
-> You can describe the Azure answer fluently. Showing it is the hard part.
-> Most demo assets are slideware, and the ones that aren't tend to be web apps
-> that need a dev environment — which doesn't land with an infrastructure
-> audience who live in VMs, agents and subscriptions.
+> Explaining that gap is easy. Showing it is not — especially to an
+> infrastructure audience, where a demo has to look like their estate.
 >
 > I hit that wall myself. I built this as a container app first, and it did not
 > resonate with infra buyers. So I rebuilt it as what it should have been:
